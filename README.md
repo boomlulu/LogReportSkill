@@ -44,4 +44,10 @@ chmod 600 ~/.config/logreport/key
 
 ## 触发
 
-在 Claude Code / Claude App 里说："看日志"、"查 error"、"session xxx 出啥问题"、"最近什么在炸"、"fingerprint xxx 是啥"，对应 skill 自动加载。
+`log-svr` skill 仅在用户说 **"去 LogReport 查日志"** 这条固定短语 + 提供 `device_id` 时才会加载。没说短语 / 没给 device_id 的模糊请求（"看日志"、"查 error"、"崩溃了" 等）不会触发，避免误激活。
+
+示例：
+
+> 去 LogReport 查日志，device_id=abc123def4567 看看最近一次 session
+
+device_id 缺失时，skill 会反问而不是擅自全表扫。

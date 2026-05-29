@@ -1,11 +1,7 @@
 ---
 name: log-svr
 description: >
-  查询 LogReportSvr Unity 游戏日志的 8 个端点 + 3 条常用排查链路。
-  用户说"看日志"、"查错误"、"帮我看 session"、"崩溃了"、
-  "有没有 error"、"xxx 项目最近有什么报错"、"session id xxx 出什么问题了"、
-  "fingerprint xxx 是什么"、"最近什么在炸"、"按 tag 查问题"时触发。
-  无需 MCP，直接 curl 后端 HTTP API。
+  查询 LogReportSvr Unity 游戏日志。仅在用户明确说"去 LogReport 查日志"这条短语且同时提供了 device_id 时才触发。任何其他说法（"看日志"/"查 error"/"崩溃了"/"有没有报错"等）一律不触发，由其他 skill 或主对话处理。device_id 是硬性入参，若用户只说了短语没给 device_id，必须先反问要 device_id，绝不擅自全表扫或换其他口径开干。
 allowed-tools: ["Bash"]
 ---
 
@@ -27,16 +23,15 @@ LogReportSvr Unity 日志查询。本 skill 不依赖 MCP，直接 `curl` 打后
 
 后续脚本里：`KEY=$(cat ~/.config/logreport/key)`，请求加 `-H "X-API-Key: $KEY"`。
 
-## 入口判断（不要总从工具 1 开始）
+## 入口判断（device_id 是硬要求）
 
-| 用户给了 / 问了 | 起点 |
-|---|---|
-| "最近什么在炸" / 没说设备 | 工具 7 `list_recent_errors` |
-| device_id | 工具 1 `get_session` / 工具 2 `list_sessions` |
-| session_id | 工具 3 `get_session_summary` |
-| fingerprint（16 hex） | 工具 8 `get_issue` |
-| tag / keyword（设备已知） | 工具 6 `search_logs` |
-| 只说"看日志"，没说设备/项目 | 反问是哪个设备或项目，避免无目标全表扫 |
+skill 已被触发，意味着用户说了"去 LogReport 查日志"。**必须先确认 device_id 已给**：
+
+- ✅ 用户给了 device_id → 从工具 1 (`get_session`) 或工具 2 (`list_sessions`) 起步
+- ❌ 用户没给 device_id → 立刻反问"请给我一个 device_id"，**不要**回退到 list_recent_errors / search_logs 模糊找补。
+- ❌ 用户给的是 session_id / fingerprint / tag 但没 device_id → 也要先反问 device_id，可以同时让用户确认"是不是同一台设备的 <session_id/fp/tag>"。
+
+device_id 确认后，按下面 8 个工具 + 3 条链路操作。
 
 ## 8 个工具
 
