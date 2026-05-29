@@ -12,16 +12,8 @@ LogReportSvr Unity 日志查询。本 skill 不依赖 MCP，直接 `curl` 打后
 ## 接入点
 
 - **Base URL**：`http://124.220.6.174:8080`
-- **Auth**：`X-API-Key` 头（带 `device_id` 的 3 个端点可免）
-- **取 Key**：dashboard `http://124.220.6.174:8080/dashboard/` 注册一个 AppKey，或找管理员要
-- **存放（首次配置）**：
-
-  ```bash
-  mkdir -p ~/.config/logreport && chmod 700 ~/.config/logreport
-  printf '%s' 'YOUR_KEY_HERE' > ~/.config/logreport/key && chmod 600 ~/.config/logreport/key
-  ```
-
-后续脚本里：`KEY=$(cat ~/.config/logreport/key)`，请求加 `-H "X-API-Key: $KEY"`。
+- **Auth**：所有请求 URL 上必须带 `?device_id=$DEVICE`（或 `&device_id=$DEVICE`）即可通过鉴权。不需要 API Key，不需要任何头。
+- **`$DEVICE`**：由用户触发时提供（"去 LogReport 查日志，device_id=…"），skill 内部直接当变量用。
 
 ## 入口判断（device_id 是硬要求）
 
@@ -56,10 +48,8 @@ curl -sS "http://124.220.6.174:8080/api/v1/agent/sessions?device_id=$DEVICE&limi
 ### 3. `get_session_summary` — 单 session 分诊（按 level 计数 + 样本）
 
 ```bash
-KEY=$(cat ~/.config/logreport/key)
 SID=xxx
-curl -sS -H "X-API-Key: $KEY" \
-  "http://124.220.6.174:8080/api/v1/agent/sessions/$SID/summary?samples_per_level=all" | jq .
+curl -sS "http://124.220.6.174:8080/api/v1/agent/sessions/$SID/summary?device_id=$DEVICE&samples_per_level=all" | jq .
 ```
 
 返回 `total_by_level` 和每级 `{ samples, total, has_more }`。响应 200KB 预算，超了按 debug→info→warning→error 顺序裁剪。
@@ -67,10 +57,8 @@ curl -sS -H "X-API-Key: $KEY" \
 ### 4. `get_session_logs` — 单 session 分页日志
 
 ```bash
-KEY=$(cat ~/.config/logreport/key)
 SID=xxx
-curl -sS -H "X-API-Key: $KEY" \
-  "http://124.220.6.174:8080/api/v1/agent/sessions/$SID/logs?level=error&limit=50" | jq .
+curl -sS "http://124.220.6.174:8080/api/v1/agent/sessions/$SID/logs?device_id=$DEVICE&level=error&limit=50" | jq .
 ```
 
 参数：`level`（error/warning/info/debug）、`tag`（模糊）、`keyword`（模糊）、`limit`（≤200）、`offset`。
@@ -78,10 +66,8 @@ curl -sS -H "X-API-Key: $KEY" \
 ### 5. `get_log_context` — 围绕某条日志的上下文窗口
 
 ```bash
-KEY=$(cat ~/.config/logreport/key)
 SID=xxx ; SEQ=287
-curl -sS -H "X-API-Key: $KEY" \
-  "http://124.220.6.174:8080/api/v1/agent/sessions/$SID/logs?around_sequence=$SEQ&before=20&after=10" | jq .
+curl -sS "http://124.220.6.174:8080/api/v1/agent/sessions/$SID/logs?device_id=$DEVICE&around_sequence=$SEQ&before=20&after=10" | jq .
 ```
 
 `before` / `after` 默认 20 / 10，最大 200。
@@ -98,21 +84,21 @@ curl -sS "http://124.220.6.174:8080/api/v1/agent/logs/search?device_id=$DEVICE&k
 ### 7. `list_recent_errors` — 全局滚动窗口 top-N fingerprint + 趋势
 
 ```bash
-KEY=$(cat ~/.config/logreport/key)
-curl -sS -H "X-API-Key: $KEY" \
-  "http://124.220.6.174:8080/api/v1/agent/errors/recent?since=24h&limit=20&include_trend=true" | jq .
+curl -sS "http://124.220.6.174:8080/api/v1/agent/errors/recent?device_id=$DEVICE&since=24h&limit=20&include_trend=true" | jq .
 ```
+
+> 注：本工具是全局聚合，URL 上的 device_id 只为过 auth，不参与过滤。
 
 每项含 `count`、`affected_sessions`、`platforms`、`count_prev_window`、`is_new`。关注 `is_new:true` 或 `count` 暴涨的。
 
 ### 8. `get_issue` — 单 fingerprint 详情
 
 ```bash
-KEY=$(cat ~/.config/logreport/key)
 FP=a1b2c3d4e5f60718
-curl -sS -H "X-API-Key: $KEY" \
-  "http://124.220.6.174:8080/api/v1/agent/issues/$FP?since=7d" | jq .
+curl -sS "http://124.220.6.174:8080/api/v1/agent/issues/$FP?device_id=$DEVICE&since=7d" | jq .
 ```
+
+> 注：本工具按 fingerprint 取详情，URL 上的 device_id 只为过 auth，不参与过滤。
 
 返回 `sample_message` / `sample_stack` / `exception_type` / `first_seen_at` / `last_seen_at` / `affected_sessions` / `affected_devices` / `breakdown`（by_version/by_platform/by_device_model）/ `recent_sessions[10]`。
 
@@ -149,7 +135,7 @@ curl -sS -H "X-API-Key: $KEY" \
 
 ## 故障排除
 
-- **HTTP 401**：没设 `X-API-Key`，且当前端点 URL 里没有 `device_id` query → 加 `-H "X-API-Key: $KEY"`
+- **HTTP 401**：URL 里漏了 `?device_id=$DEVICE`。**所有**端点都必须带，包括 `/errors/recent` 和 `/issues/:fp` 这种逻辑上和 device 无关的，因为 device_id query 是鉴权凭证。
 - **HTTP 404 on `/sessions/foo/summary`**：session_id 不存在，先用工具 2 / 工具 6 找正确的 id
 - **响应 truncated**：`get_session_summary` 超 200KB 自动裁，看 `truncated_reason`；用工具 4 配 `level` 单独拉
 - **连不上 124.220.6.174:8080**：检查腾讯云安全组入站 8080；或走 MCP（如能用）`https://mcp.bombgit.top:8443/mcp`

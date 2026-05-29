@@ -32,16 +32,6 @@ cd ~/.claude/.skill-sources/LogReportSkill && git pull
 
 软链自动指到最新版本，无需重做。
 
-## 配置 API Key（log-svr 必需）
-
-`log-svr` 的 5/8 个端点需要 `X-API-Key`。在 LogReportSvr dashboard `http://124.220.6.174:8080/dashboard/` 注册一个属于自己的 AppKey，保存到本地：
-
-```bash
-mkdir -p ~/.config/logreport && chmod 700 ~/.config/logreport
-printf '%s' 'YOUR_KEY_HERE' > ~/.config/logreport/key
-chmod 600 ~/.config/logreport/key
-```
-
 ## 触发
 
 `log-svr` skill 仅在用户说 **"去 LogReport 查日志"** 这条固定短语 + 提供 `device_id` 时才会加载。没说短语 / 没给 device_id 的模糊请求（"看日志"、"查 error"、"崩溃了" 等）不会触发，避免误激活。
