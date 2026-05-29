@@ -14,14 +14,12 @@ Claude Code skills that wrap [LogReportSvr](https://github.com/boomlulu/LogRepor
 
 ```bash
 # 1) clone 本仓库到本地稳定路径
-git clone git@github.com:boomlulu/LogReportSkill.git ~/.claude/.skill-sources/LogReportSkill
+git clone https://github.com/boomlulu/LogReportSkill.git ~/.claude/.skill-sources/LogReportSkill
 
 # 2) 每个 skill 用软链到 ~/.claude/skills/
 mkdir -p ~/.claude/skills
 ln -sfn ~/.claude/.skill-sources/LogReportSkill/log-svr ~/.claude/skills/log-svr
 ```
-
-> 或用 HTTPS：`git clone https://github.com/boomlulu/LogReportSkill.git ~/.claude/.skill-sources/LogReportSkill`
 
 ## 更新
 
