@@ -1,6 +1,6 @@
 # 发布 skill 到 LogReportSkill
 
-本仓库是 boomlulu 团队的共享 Claude Code skill 分发仓。任何新 skill 走以下流程发到这里，下游同事 `git pull` + 软链就装上了。
+本仓库是共享 Claude Code skill 分发仓。任何新 skill 走以下流程发到这里，下游同事 `git pull` + 软链就装上了。
 
 ## 仓库约定
 
