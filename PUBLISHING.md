@@ -53,7 +53,7 @@ allowed-tools: ["Bash", "Read", ...]
 ### 1. clone 仓库到稳定路径（首次）
 
 ```bash
-git clone git@github.com-boomlulu:boomlulu/LogReportSkill.git ~/dev/LogReportSkill
+git clone git@github.com:boomlulu/LogReportSkill.git ~/dev/LogReportSkill
 cd ~/dev/LogReportSkill
 ```
 
@@ -99,7 +99,7 @@ ln -sfn ~/dev/LogReportSkill/my-new-skill ~/.claude/skills/my-new-skill
 
 ```bash
 git add my-new-skill/ README.md
-git -c user.name='boomlulu' -c user.email='boom.chatgpt.plus.01@gmail.com' commit -m "feat(<skill-name>): <一句话描述>"
+git commit -m "feat(<skill-name>): <一句话描述>"
 git push origin main
 ```
 
@@ -108,7 +108,7 @@ git push origin main
 同事一次性安装（首次）：
 
 ```bash
-git clone git@github.com-boomlulu:boomlulu/LogReportSkill.git ~/.claude/.skill-sources/LogReportSkill
+git clone git@github.com:boomlulu/LogReportSkill.git ~/.claude/.skill-sources/LogReportSkill
 ln -sfn ~/.claude/.skill-sources/LogReportSkill/my-new-skill ~/.claude/skills/my-new-skill
 ```
 
