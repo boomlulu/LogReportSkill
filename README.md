@@ -6,7 +6,7 @@ Claude Code skills that wrap [LogReportSvr](https://github.com/boomlulu/LogRepor
 
 | skill | 用途 |
 |---|---|
-| [log-svr](log-svr/) | 查询 Unity 游戏日志的 8 个端点 + 3 条常用排查链路（无需 MCP，直接 curl 后端） |
+| [log-svr](log-svr/) | 查询 Unity 游戏日志的 8 个端点 + 3 条常用排查链路（无需 MCP，直接 curl 后端）。安装与使用见 [USAGE](log-svr/USAGE.md) |
 
 ## 安装
 
